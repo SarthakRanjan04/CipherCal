@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monoalphabetic Cipher Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f8ff;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #4682b4;
+        }
+        p {
+            text-align: left;
+            font-size: 1.2em;
+            margin: 12px ;
+        }
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4682b4;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #5a9bd6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to Monoalphabetic Cipher Calculator</h1>
+    <p>
+        Welcome to the Monoalphabetic Cipher Calculator, your dedicated tool for encoding and decoding messages using a simple form of substitution cipher.
+        The Monoalphabetic Cipher works by substituting each letter in the plaintext with a corresponding letter in a fixed, mixed alphabet. 
+        For example, if the key is "ZYXWVUTSRQPONMLKJIHGFEDCBA", 'A' would become 'Z', 'B' would become 'Y', and so on. 
+        To decrypt, the process is reversed using the same key. Enter your text and key to encrypt or decrypt your message with ease.
+    </p>
+
+    <form id="cipherForm">
+        <label for="inputText">Input Text:</label>
+        <textarea id="inputText" rows="2"></textarea>
+
+        <label for="key">Key:</label>
+        <input type="text" id="key" maxlength="26">
+
+        <button type="button" onclick="encrypt()">Encrypt</button>
+        <button type="button" onclick="decrypt()">Decrypt</button>
+
+        <label for="outputText">Output Text:</label>
+        <textarea id="outputText" rows="2" readonly></textarea>
+    </form>
+
+    <script>
+        function validateKey(key) {
+            if (/[^a-zA-Z]/.test(key) || key.length !== 26) {
+                alert('Key must be exactly 26 alphabetic characters.');
+                return false;
+            }
+            return true;
+        }
+
+        function createCipherMap(key) {
+            const map = {};
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            key = key.toUpperCase();
+            for (let i = 0; i < 26; i++) {
+                map[alphabet[i]] = key[i];
+                map[alphabet[i].toLowerCase()] = key[i].toLowerCase();
+            }
+            return map;
+        }
+
+        function monoalphabeticCipher(str, key, decrypt = false) {
+            const cipherMap = createCipherMap(key);
+            const inverseCipherMap = Object.fromEntries(Object.entries(cipherMap).map(([k, v]) => [v, k]));
+
+            return str.replace(/[a-zA-Z]/g, char => {
+                if (decrypt) {
+                    return inverseCipherMap[char];
+                }
+                return cipherMap[char];
+            });
+        }
+
+        function encrypt() {
+            const inputText = document.getElementById('inputText').value;
+            const key = document.getElementById('key').value;
+            if (!validateKey(key)) {
+                return;
+            }
+            const encryptedText = monoalphabeticCipher(inputText, key);
+            document.getElementById('outputText').value = encryptedText;
+        }
+
+        function decrypt() {
+            const inputText = document.getElementById('inputText').value;
+            const key = document.getElementById('key').value;
+            if (!validateKey(key)) {
+                return;
+            }
+            const decryptedText = monoalphabeticCipher(inputText, key, true);
+            document.getElementById('outputText').value = decryptedText;
+        }
+    </script>
+    <a href="listSub.html"><button><h3> Back... </h3></button></a></div>
+</body>
+</html>

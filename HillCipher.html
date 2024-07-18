@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hill Cipher Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f8ff;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #4682b4;
+        }
+        p {
+            text-align: left;
+            font-size: 1.2em;
+            margin: 12px;
+        }
+        form {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4682b4;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #5a9bd6;
+        }
+        .matrix-input {
+            display: grid;
+            gap: 5px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .matrix-input label {
+            display: block;
+            text-align: center;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .matrix-input input {
+            width: 50px;
+            padding: 5px;
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to Hill Cipher Calculator</h1>
+    <p>
+        Welcome to the Hill Cipher Calculator. The Hill cipher is a polygraphic substitution cipher based on linear algebra. 
+        Choose the number of rows and columns for the key matrix, and then enter the values for each element of the matrix. 
+        Input your text to encrypt or decrypt your messages using this matrix. Dive into this cryptographic method and secure your communications.
+    </p>
+
+    <form id="cipherForm">
+        <label for="matrixSize">Select Matrix Size:</label>
+        <select id="matrixSize" onchange="updateMatrixInputs()">
+            <option value="2">2x2</option>
+            <option value="3" selected>3x3</option>
+        </select>
+
+        <div id="matrixInputs" class="matrix-input"></div>
+
+        <label for="inputText">Input Text:</label>
+        <textarea id="inputText" rows="1" ></textarea>
+
+        <button type="button" onclick="encrypt()">Encrypt</button>
+        <!--<button type="button" onclick="decrypt()">Decrypt</button>-->
+
+        <label for="outputText">Output Text:</label>
+        <textarea id="outputText" rows="1" readonly></textarea>
+    </form>
+
+    <script>
+        const modValue = 26;
+
+        function createMatrixInputs(size) {
+            const container = document.getElementById('matrixInputs');
+            container.innerHTML = '';
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const label = document.createElement('label');
+                    label.textContent = `(${i + 1}, ${j + 1})`;
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.id = `matrix-${i}-${j}`;
+                    input.value = 0;
+                    label.appendChild(input);
+                    container.appendChild(label);
+                }
+            }
+        }
+
+        function updateMatrixInputs() {
+            const size = parseInt(document.getElementById('matrixSize').value);
+            createMatrixInputs(size);
+        }
+
+        function getKeyMatrix(size) {
+            const keyMatrix = Array.from({ length: size }, () => Array(size).fill(0));
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    keyMatrix[i][j] = parseInt(document.getElementById(`matrix-${i}-${j}`).value) || 0;
+                }
+            }
+            return keyMatrix;
+        }
+
+        function mod(n, m) {
+            return ((n % m) + m) % m;
+        }
+
+        function matrixMultiply(a, b, size, modValue = 26) {
+            let result = Array.from({ length: size }, () => Array(size).fill(0));
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    let sum = 0;
+                    for (let k = 0; k < size; k++) {
+                        sum += a[i][k] * b[k][j];
+                    }
+                    result[i][j] = mod(sum, modValue);
+                }
+            }
+            return result;
+        }
+
+        function determinant(matrix, size, modValue = 26) {
+            if (size === 2) {
+                return mod(matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0], modValue);
+            }
+            if (size === 3) {
+                return mod(matrix[0][0] * (matrix[1][1] * matrix[2][2] - matrix[2][1] * matrix[1][2]) -
+                           matrix[0][1] * (matrix[1][0] * matrix[2][2] - matrix[2][0] * matrix[1][2]) +
+                           matrix[0][2] * (matrix[1][0] * matrix[2][1] - matrix[2][0] * matrix[1][1]), modValue);
+            }
+            throw new Error('Unsupported matrix size');
+        }
+
+        function adjugate(matrix, size, modValue = 26) {
+            if (size === 2) {
+                return [
+                    [matrix[1][1], -matrix[0][1]],
+                    [-matrix[1][0], matrix[0][0]]
+                ].map(row => row.map(val => mod(val, modValue)));
+            }
+            if (size === 3) {
+                let adj = Array.from({ length: 3 }, () => Array(3).fill(0));
+                adj[0][0] = mod(matrix[1][1] * matrix[2][2] - matrix[2][1] * matrix[1][2], modValue);
+                adj[0][1] = mod(-(matrix[1][0] * matrix[2][2] - matrix[2][0] * matrix[1][2]), modValue);
+                adj[0][2] = mod(matrix[1][0] * matrix[2][1] - matrix[2][0] * matrix[1][1], modValue);
+                adj[1][0] = mod(-(matrix[0][1] * matrix[2][2] - matrix[2][1] * matrix[0][2]), modValue);
+                adj[1][1] = mod(matrix[0][0] * matrix[2][2] - matrix[2][0] * matrix[0][2], modValue);
+                adj[1][2] = mod(-(matrix[0][0] * matrix[2][1] - matrix[2][0] * matrix[0][1]), modValue);
+                adj[2][0] = mod(matrix[0][1] * matrix[1][2] - matrix[1][1] * matrix[0][2], modValue);
+                adj[2][1] = mod(-(matrix[0][0] * matrix[1][2] - matrix[1][0] * matrix[0][2]), modValue);
+                adj[2][2] = mod(matrix[0][0] * matrix[1][1] - matrix[1][0] * matrix[0][1], modValue);
+
+                return adj[0].map((_, colIndex) => adj.map(row => row[colIndex]));
+            }
+            throw new Error('Unsupported matrix size');
+        }
+
+        function modInverse(a, m) {
+            a = mod(a, m);
+            for (let x = 1; x < m; x++) {
+                if (mod(a * x, m) === 1) {
+                    return x;
+                }
+            }
+            return -1;
+        }
+
+        function invertMatrix(matrix, size, modValue = 26) {
+            let det = determinant(matrix, size, modValue);
+            let invDet = modInverse(det, modValue);
+            if (invDet === -1) return null;
+
+            let adj = adjugate(matrix, size, modValue);
+            for (let i = 0; i < adj.length; i++) {
+                for (let j = 0; j < adj[i].length; j++) {
+                    adj[i][j] = mod(adj[i][j] * invDet, modValue);
+                }
+            }
+            return adj;
+        }
+
+        function encrypt() {
+            const size = parseInt(document.getElementById('matrixSize').value);
+            const inputText = document.getElementById('inputText').value.replace(/ /g, '_').toUpperCase();
+            const keyMatrix = getKeyMatrix(size);
+
+            if (inputText.length !== size) {
+                alert(`Input text must be exactly ${size} characters.`);
+                return;
+            }
+
+            let textMatrix = [];
+            for (let i = 0; i < size; i++) {
+                textMatrix.push([inputText.charCodeAt(i) - 65]);
+            }
+
+            let encryptedMatrix = matrixMultiply(keyMatrix, textMatrix, size);
+            let encryptedText = encryptedMatrix.flat().map(n => String.fromCharCode(mod(n, 26) + 65)).join('');
+
+            document.getElementById('outputText').value = encryptedText;
+        }
+
+        function decrypt() {
+            const size = parseInt(document.getElementById('matrixSize').value);
+            const inputText = document.getElementById('inputText').value.replace(/ /g, '_').toUpperCase();
+            const keyMatrix = getKeyMatrix(size);
+
+            if (inputText.length !== size) {
+                alert(`Input text must be exactly ${size} characters.`);
+                return;
+            }
+
+            let invKeyMatrix = invertMatrix(keyMatrix, size);
+            if (!invKeyMatrix) {
+                alert('Key matrix is not invertible.');
+                return;
+            }
+
+            let textMatrix = [];
+            for (let i = 0; i < size; i++) {
+                textMatrix.push([inputText.charCodeAt(i) - 65]);
+            }
+
+            let decryptedMatrix = matrixMultiply(invKeyMatrix, textMatrix, size);
+            let decryptedText = decryptedMatrix.flat().map(n => String.fromCharCode(mod(n, 26) + 65)).join('');
+
+            document.getElementById('outputText').value = decryptedText;
+        }
+
+        // Initialize with default 3x3 matrix
+        updateMatrixInputs();
+    </script>
+</body>
+</html>

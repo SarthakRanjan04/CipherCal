@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Columnar Transposition Cipher Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f8ff;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #4682b4;
+        }
+        p {
+            text-align: left;
+            font-size: 1.2em;
+            margin: 12px;
+        }
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4682b4;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #5a9bd6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to Columnar Transposition Cipher Calculator</h1>
+    <p>
+        &emsp;Welcome to the Columnar Transposition Cipher Calculator, your tool for encrypting and decrypting messages using the Columnar Transposition technique.
+        This cipher works by writing the plaintext in rows of a fixed length and then reading the columns to create the ciphertext. The order of the columns is
+        determined by a keyword. To decrypt, the process is reversed. Enter your text and a keyword to start encoding or decoding your messages. Dive into
+        this classic cryptographic method and secure your communications easily.
+    </p>
+
+    <form id="cipherForm">
+        <label for="inputText">Input Text:</label>
+        <textarea id="inputText" rows="2"></textarea>
+
+        <label for="keyword">Keyword:</label>
+        <input type="text" id="keyword">
+
+        <button type="button" onclick="encrypt()">Encrypt</button>
+        <button type="button" onclick="decrypt()">Decrypt</button>
+
+        <label for="outputText">Output Text:</label>
+        <textarea id="outputText" rows="2" readonly></textarea>
+    </form>
+
+    <script>
+       function columnarEncrypt(text, keyword) {
+            const columns = keyword.length;
+            const rows = Math.ceil(text.length / columns);
+            const grid = Array.from({ length: rows }, () => Array(columns).fill('_'));
+
+            let index = 0;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < columns; c++) {
+                    if (index < text.length) {
+                        grid[r][c] = text[index++];
+                    }
+                }
+            }
+
+            const sortedKey = keyword.split('').map((char, index) => [char, index]).sort();
+            let encryptedText = '';
+            for (let [char, col] of sortedKey) {
+                for (let r = 0; r < rows; r++) {
+                    encryptedText += grid[r][col];
+                }
+            }
+            return encryptedText;
+        }
+
+        function columnarDecrypt(ciphertext, keyword) {
+            const columns = keyword.length;
+            const rows = Math.ceil(ciphertext.length / columns);
+            const grid = Array.from({ length: rows }, () => Array(columns).fill('_'));
+
+            const sortedKey = keyword.split('').map((char, index) => [char, index]).sort();
+            let index = 0;
+            for (let [char, col] of sortedKey) {
+                for (let r = 0; r < rows; r++) {
+                    if (index < ciphertext.length) {
+                        grid[r][col] = ciphertext[index++];
+                    }
+                }
+            }
+
+            let decryptedText = '';
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < columns; c++) {
+                    decryptedText += grid[r][c];
+                }
+            }
+            return decryptedText.replace(/_/g, ' ');
+        }
+
+        function encrypt() {
+            const inputText = document.getElementById('inputText').value.replace(/ /g, '_');
+            const keyword = document.getElementById('keyword').value.replace(/ /g, '_').toUpperCase();
+
+            if (keyword.length === 0) {
+                alert('Keyword must be provided.');
+                return;
+            }
+
+            const encryptedText = columnarEncrypt(inputText, keyword);
+            document.getElementById('outputText').value = encryptedText;
+        }
+
+        function decrypt() {
+            const inputText = document.getElementById('inputText').value.replace(/ /g, '_');
+            const keyword = document.getElementById('keyword').value.replace(/ /g, '_').toUpperCase();
+
+            if (keyword.length === 0) {
+                alert('Keyword must be provided.');
+                return;
+            }
+
+            const decryptedText = columnarDecrypt(inputText, keyword);
+            document.getElementById('outputText').value = decryptedText;
+        }
+    </script>
+    <a href="listSub.html"><button><h3> Back... </h3></button></a>
+</body>
+</html>

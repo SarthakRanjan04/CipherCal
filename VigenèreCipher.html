@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vigenère Cipher Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f8ff;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #4682b4;
+        }
+        p {
+            text-align: left;
+            font-size: 1.2em;
+            margin: 10px;
+        }
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4682b4;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #5a9bd6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to Vigenère Cipher Calculator</h1>
+    <p>
+        Welcome to the Vigenère Cipher Calculator, your dedicated tool for encoding and decoding messages using the Vigenère Cipher, 
+        a method of encrypting alphabetic text by using a simple form of polyalphabetic substitution. 
+        The Vigenère Cipher uses a keyword to shift each letter of the plaintext by a varying amount based on the corresponding letter of the keyword. 
+        For example, with the keyword "KEY", the first letter of the plaintext is shifted by the position of 'K' in the alphabet, 
+        the second by 'E', and so on. To decrypt, the same process is reversed. Enter your text and keyword to encrypt or decrypt your message with ease.
+    </p>
+
+    <form id="cipherForm">
+        <label for="inputText">Input Text:</label>
+        <textarea id="inputText" rows="2"></textarea>
+
+        <label for="keyword">Keyword:</label>
+        <input type="text" id="keyword" >
+
+        <button type="button" onclick="encrypt()">Encrypt</button>
+        <button type="button" onclick="decrypt()">Decrypt</button>
+
+        <label for="outputText">Output Text:</label>
+        <textarea id="outputText" rows="2" readonly></textarea>
+    </form>
+
+    <script>
+        function validateKeyword(keyword) {
+            if (/[^a-zA-Z]/.test(keyword)) {
+                alert('Keyword must contain only alphabetic characters.');
+                return false;
+            }
+            return true;
+        }
+
+        function vigenereCipher(str, keyword, decrypt = false) {
+            keyword = keyword.toUpperCase();
+            return str.replace(/[a-z]/gi, (char, i) => {
+                const isUpperCase = char <= 'Z';
+                const start = isUpperCase ? 65 : 97;
+                const k = keyword[i % keyword.length].charCodeAt(0) - 65;
+                const shift = decrypt ? 26 - k : k;
+                return String.fromCharCode((char.charCodeAt(0) - start + shift) % 26 + start);
+            });
+        }
+
+        function encrypt() {
+            const inputText = document.getElementById('inputText').value;
+            const keyword = document.getElementById('keyword').value;
+            if (!validateKeyword(keyword)) {
+                return;
+            }
+            const encryptedText = vigenereCipher(inputText, keyword);
+            document.getElementById('outputText').value = encryptedText;
+        }
+
+        function decrypt() {
+            const inputText = document.getElementById('inputText').value;
+            const keyword = document.getElementById('keyword').value;
+            if (!validateKeyword(keyword)) {
+                return;
+            }
+            const decryptedText = vigenereCipher(inputText, keyword, true);
+            document.getElementById('outputText').value = decryptedText;
+        }
+    </script>
+    <a href="listSub.html"><button><h3> Back... </h3></button></a></div>
+
+</body>
+</html>

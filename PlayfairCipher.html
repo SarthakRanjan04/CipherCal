@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playfair Cipher Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f8ff;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #4682b4;
+        }
+        p {
+            text-align: left;
+            font-size: 1.2em;
+            margin: 10px ;
+        }
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4682b4;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #5a9bd6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to Playfair Cipher Calculator</h1>
+    <p>
+        Welcome to the Playfair Cipher Calculator, your dedicated tool for encoding and decoding messages using the Playfair Cipher.
+        Enter your text and key to encrypt or decrypt your message with ease.
+    </p>
+
+    <form id="cipherForm">
+        <label for="inputText">Input Text:</label>
+        <textarea id="inputText" rows="2"></textarea>
+
+        <label for="keyword">Key:</label>
+        <input type="text" id="key">
+
+        <button type="button" onclick="encrypt()">Encrypt</button>
+        <button type="button" onclick="decrypt()">Decrypt</button>
+
+        <label for="outputText">Output Text:</label>
+        <textarea id="outputText" rows="2" readonly></textarea>
+    </form>
+
+    <script>
+        function prepareText(text) {
+            text = text.toUpperCase().replace(/[^A-Z]/g, '');
+            text = text.replace(/J/g, 'I');
+            let prepared = '';
+            for (let i = 0; i < text.length; i += 2) {
+                if (i + 1 < text.length && text[i] === text[i + 1]) {
+                    prepared += text[i] + 'X';
+                    i--;
+                } else if (i + 1 === text.length) {
+                    prepared += text[i] + 'Z';
+                } else {
+                    prepared += text[i] + text[i + 1];
+                }
+            }
+            return prepared;
+        }
+
+        function generateKeyMatrix(key) {
+            key = key.toUpperCase().replace(/[^A-Z]/g, '');
+            key = key.replace(/J/g, 'I');
+            let matrix = '';
+            let used = {};
+            for (let char of key) {
+                if (!used[char]) {
+                    matrix += char;
+                    used[char] = true;
+                }
+            }
+            for (let char of 'ABCDEFGHIKLMNOPQRSTUVWXYZ') {
+                if (!used[char]) {
+                    matrix += char;
+                    used[char] = true;
+                }
+            }
+            return matrix.match(/.{1,5}/g).map(row => row.split(''));
+        }
+
+        function findPosition(matrix, char) {
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col < 5; col++) {
+                    if (matrix[row][col] === char) {
+                        return { row, col };
+                    }
+                }
+            }
+        }
+
+        function playfairEncrypt(text, keyMatrix) {
+            let cipherText = '';
+            for (let i = 0; i < text.length; i += 2) {
+                let pos1 = findPosition(keyMatrix, text[i]);
+                let pos2 = findPosition(keyMatrix, text[i + 1]);
+                if (pos1.row === pos2.row) {
+                    cipherText += keyMatrix[pos1.row][(pos1.col + 1) % 5];
+                    cipherText += keyMatrix[pos2.row][(pos2.col + 1) % 5];
+                } else if (pos1.col === pos2.col) {
+                    cipherText += keyMatrix[(pos1.row + 1) % 5][pos1.col];
+                    cipherText += keyMatrix[(pos2.row + 1) % 5][pos2.col];
+                } else {
+                    cipherText += keyMatrix[pos1.row][pos2.col];
+                    cipherText += keyMatrix[pos2.row][pos1.col];
+                }
+            }
+            return cipherText;
+        }
+
+        function playfairDecrypt(text, keyMatrix) {
+            let plainText = '';
+            for (let i = 0; i < text.length; i += 2) {
+                let pos1 = findPosition(keyMatrix, text[i]);
+                let pos2 = findPosition(keyMatrix, text[i + 1]);
+                if (pos1.row === pos2.row) {
+                    plainText += keyMatrix[pos1.row][(pos1.col + 4) % 5];
+                    plainText += keyMatrix[pos2.row][(pos2.col + 4) % 5];
+                } else if (pos1.col === pos2.col) {
+                    plainText += keyMatrix[(pos1.row + 4) % 5][pos1.col];
+                    plainText += keyMatrix[(pos2.row + 4) % 5][pos2.col];
+                } else {
+                    plainText += keyMatrix[pos1.row][pos2.col];
+                    plainText += keyMatrix[pos2.row][pos1.col];
+                }
+            }
+            return plainText;
+        }
+
+        function encrypt() {
+            const inputText = document.getElementById('inputText').value;
+            const key = document.getElementById('key').value;
+            const preparedText = prepareText(inputText);
+            const keyMatrix = generateKeyMatrix(key);
+            const encryptedText = playfairEncrypt(preparedText, keyMatrix);
+            document.getElementById('outputText').value = encryptedText;
+        }
+
+        function decrypt() {
+            const inputText = document.getElementById('inputText').value;
+            const key = document.getElementById('key').value;
+            const preparedText = prepareText(inputText);
+            const keyMatrix = generateKeyMatrix(key);
+            const decryptedText = playfairDecrypt(preparedText, keyMatrix);
+            document.getElementById('outputText').value = decryptedText;
+        }
+    </script>
+</body>
+</html>
